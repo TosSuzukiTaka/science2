@@ -13,7 +13,9 @@
         init: function () {
           const el = this.el;
           for (let i = 0; i < 40; i++) {
-            const particle = document.createElement('a-sphere');
+            //const particle = document.createElement('a-sphere');
+            const particle = document.querySelector('#particle');
+            
             const startX = (Math.random() - 0.5) * 0.15;
             const startZ = (Math.random() - 0.5) * 0.15;
             const endX = startX + (Math.random() - 0.5) * 0.5;
@@ -21,8 +23,8 @@
             const endZ = startZ + (Math.random() - 0.5) * 0.5;
 
             particle.setAttribute('position', `${startX} 0.1 ${startZ}`);
-            particle.setAttribute('radius', '0.03'); // 大きめに
-            particle.setAttribute('color', '#FFA500');
+            particle.setAttribute('radius', '0.015'); // 大きめ（0.03）の半分に
+            particle.setAttribute('color', '#FF69B4');  // オレンジ（#FFA500）からピンク
             particle.setAttribute('material', 'opacity: 1; transparent: true;');
 
             particle.setAttribute('animation__move', `
@@ -36,7 +38,7 @@
             particle.setAttribute('animation__fade', `
               property: material.opacity;
               to: 0;
-              dur: 4000;
+              dur: 10000; // 4000から変更
               easing: linear;
               loop: false;
             `);
