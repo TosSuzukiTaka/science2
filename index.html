@@ -11,9 +11,10 @@
       AFRAME.registerComponent('marker-contained-particles', {
         init: function () {
           // 調整パラメータ（ここを変えれば挙動を簡単にチューニングできます）
+          const el = this.el;
           const PARTICLE_COUNT = 50;
           const DURATION_MS = 90000;      // 粒の総寿命（ms） ← これを大きくすると長く残る
-          const FADE_START_MS = 3000;    // 何ms後からフェード開始するか（ms）
+          // const FADE_START_MS = 3000;    // 何ms後からフェード開始するか（ms）
           const GRAVITY = -0.15;         // 重力（負の値）。絶対値を小さくするとゆっくり落ちる
 
           for (let i = 0; i < PARTICLE_COUNT; i++) {
