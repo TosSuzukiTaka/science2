@@ -1,14 +1,107 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>粉が大きく溶けて広がる様子（視認性強化）</title>
+    <title>粉が自然に散って消える（重力・拡散効果付き）</title>
     <meta charset="utf-8">
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
       body { margin: 0; overflow: hidden; }
     </style>
+
     <script>
+      AFRAME.registerComponent('natural-dissolve', {
+        init: function () {
+          const el = this.el;
+
+          for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('a-sphere');
+
+            // 初期位置（中心付近にランダム配置）
+            const startX = (Math.random() - 0.5) * 0.1;
+            const startZ = (Math.random() - 0.5) * 0.1;
+            const startY = 0.05 + Math.random() * 0.05;
+
+            // 速度ベクトル（拡散方向）
+            const vx = (Math.random() - 0.5) * 0.3;
+            const vy = 0.3 + Math.random() * 0.3;  // 上方向の初速
+            const vz = (Math.random() - 0.5) * 0.3;
+
+            // 重力加速度
+            const gravity = -0.25;
+
+            // パーティクル設定
+            particle.setAttribute('position', `${startX} ${startY} ${startZ}`);
+            particle.setAttribute('radius', '0.02');
+            particle.setAttribute('color', '#FFC0CB'); // ピンク系に変更
+            particle.setAttribute('material', 'opacity: 1; transparent: true;');
+
+            // 自然な動きを再現するアニメーションループ
+            let time = 0;
+            const duration = 4000;
+            const interval = 30; // ミリ秒
+
+            const moveInterval = setInterval(() => {
+              time += interval;
+
+              // シンプルな物理風アニメーション
+              const t = time / 1000; // 秒単位
+              const x = startX + vx * t;
+              const y = startY + vy * t + 0.5 * gravity * t * t;
+              const z = startZ + vz * t;
+
+              // 少し風で揺らぐように
+              const swayX = Math.sin(t * 6 + i) * 0.01;
+              const swayZ = Math.cos(t * 5 + i) * 0.01;
+
+              particle.setAttribute('position', `${x + swayX} ${y} ${z + swayZ}`);
+
+              // 透明度を減らす
+              const opacity = Math.max(1 - t / 3, 0);
+              particle.setAttribute('material', 'opacity', opacity);
+
+              // 下に落ちきったら削除
+              if (y < 0 || time > duration) {
+                el.removeChild(particle);
+                clearInterval(moveInterval);
+              }
+            }, interval);
+
+            el.appendChild(particle);
+          }
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <a-scene embedded arjs>
+      <a-marker preset="hiro">
+        <a-entity natural-dissolve></a-entity>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <p style="position: fixed; top: 10px; left: 10px; background: white; padding: 5px;">
+      🌸 粉が自然に散って落ちる（重力・拡散効果付き）
+    </p>
+  </body>
+</html>
+<!--
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>粉が大きく溶けて広がる様子（視認性強化）</title>
+    <meta charset="utf-8">
+    <!-- Web上で3D・VR/ARを簡単に扱えるフレームワーク --><!--
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <!-- マーカー認識型ARをWeb上で実現するライブラリ --><!--
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+      body { margin: 0; overflow: hidden; }
+    </style>
+    <script>
+      // 粉の粒（オレンジ色の球）を生成し、飛び散って消えるアニメーションをつける
       AFRAME.registerComponent('dissolve-particles', {
         init: function () {
           const el = this.el;
@@ -50,6 +143,7 @@
     </script>
   </head>
   <body>
+    <!-- Hiroマーカーを認識すると、その位置に<a-entity dissolve-particles>が表示される --><!--
     <a-scene embedded arjs>
       <a-marker preset="hiro">
         <a-entity dissolve-particles></a-entity>
@@ -61,3 +155,4 @@
     </p>
   </body>
 </html>
+-->
