@@ -110,12 +110,14 @@
   <body>
     <a-scene embedded arjs>
       <a-marker preset="hiro">
-        <a-entity slow-dissolve></a-entity>
+        <!--<a-entity slow-dissolve></a-entity>-->
+        <!-- 💠 粒がマーカー内で舞う -->
+        <a-entity marker-contained-particles></a-entity>
       </a-marker>
       <a-entity camera></a-entity>
     </a-scene>
     <!--<p style="position:fixed;left:10px;top:10px;background:#fff;padding:6px;">⏳ 消えるのをゆっくりに調整済み</p>-->
-    <p style="position:fixed;left:10px;top:10px;background:#fff;padding:6px;">⏳ ビーカーの中ではこんなことが起きていた！</p>
+    <p style="position:fixed;left:10px;top:10px;background:#fff;padding:6px;">⏳ 目を凝らすと、ビーカーの中ではこんなことが起きていた！！</p>
   </body>
 </html>
 <!--
