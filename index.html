@@ -1,3 +1,6 @@
+<!--
+粒の動きをもっと自然にしたり、重力や散乱効果を追加 する改良版
+-->>
 <!DOCTYPE html>
 <html>
   <head>
@@ -14,7 +17,7 @@
         init: function () {
           const el = this.el;
 
-          for (let i = 0; i < 50; i++) {
+          for (let i = 0; i < 100; i++) {
             const particle = document.createElement('a-sphere');
 
             // 初期位置（中心付近にランダム配置）
@@ -38,7 +41,7 @@
 
             // 自然な動きを再現するアニメーションループ
             let time = 0;
-            const duration = 4000;
+            const duration = 10000;
             const interval = 30; // ミリ秒
 
             const moveInterval = setInterval(() => {
@@ -87,7 +90,7 @@
     </p>
   </body>
 </html>
-<!--
+<!--以下元ソース、ちょっといじってみたけど
 <!DOCTYPE html>
 <html>
   <head>
