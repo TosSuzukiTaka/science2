@@ -10,10 +10,11 @@
     <script>
       AFRAME.registerComponent('marker-contained-particles', {
         init: function () {
-          const el = this.el;
+          // 調整パラメータ（ここを変えれば挙動を簡単にチューニングできます）
           const PARTICLE_COUNT = 50;
-          const DURATION_MS = 8000;
-          const GRAVITY = -0.15;
+          const DURATION_MS = 90000;      // 粒の総寿命（ms） ← これを大きくすると長く残る
+          const FADE_START_MS = 3000;    // 何ms後からフェード開始するか（ms）
+          const GRAVITY = -0.15;         // 重力（負の値）。絶対値を小さくするとゆっくり落ちる
 
           for (let i = 0; i < PARTICLE_COUNT; i++) {
             const particle = document.createElement('a-sphere');
@@ -37,10 +38,12 @@
 
             const startTime = performance.now();
 
+            // アニメーションループ（requestAnimationFrame）
             const animate = (now) => {
               const elapsed = now - startTime;
               const t = elapsed / 1000;
 
+              // 物理っぽい位置
               const x = startX + vx * t;
               const y = startY + vy * t + 0.5 * GRAVITY * t * t;
               const z = startZ + vz * t;
@@ -84,7 +87,7 @@
       <a-entity camera></a-entity>
     </a-scene>
     <p style="position:fixed;top:10px;left:10px;background:#fff;padding:5px;">
-      🧪 Hiroマーカー内で粉が舞うデモ
+      🧪 なんと！ビーカーの中ではこんなことが起きていた！
     </p>
   </body>
 </html>
