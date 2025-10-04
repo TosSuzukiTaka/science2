@@ -1,6 +1,101 @@
 <!--
 粒の動きをもっと自然にしたり、重力や散乱効果を追加 する改良版
 -->>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ゆっくり消える自然な粒（重力・散乱・長寿命）</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>body{margin:0;overflow:hidden;}</style>
+
+    <script>
+      AFRAME.registerComponent('slow-dissolve', {
+        init: function () {
+          const el = this.el;
+
+          // 調整パラメータ（ここを変えれば挙動を簡単にチューニングできます）
+          const PARTICLE_COUNT = 50;
+          const DURATION_MS = 90000;      // 粒の総寿命（ms） ← これを大きくすると長く残る
+          const FADE_START_MS = 3000;    // 何ms後からフェード開始するか（ms）
+          const GRAVITY = -0.12;         // 重力（負の値）。絶対値を小さくするとゆっくり落ちる
+          
+          for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const particle = document.createElement('a-sphere');
+
+            // 初期位置（中心付近）
+            const startX = (Math.random() - 0.5) * 0.12;
+            const startZ = (Math.random() - 0.5) * 0.12;
+            const startY = 0.04 + Math.random() * 0.04;
+
+            // 初速（ランダム）
+            const vx = (Math.random() - 0.5) * 0.25;
+            const vy = 0.18 + Math.random() * 0.25; // 上方向の初速（小さめにして滞空時間を延ばす）
+            const vz = (Math.random() - 0.5) * 0.25;
+
+            particle.setAttribute('position', `${startX} ${startY} ${startZ}`);
+            particle.setAttribute('radius', `${0.018 + Math.random()*0.01}`);
+            particle.setAttribute('color', '#FFC0CB');
+            particle.setAttribute('material', 'opacity: 1; transparent: true;');
+
+            el.appendChild(particle);
+
+            // アニメーションループ（requestAnimationFrame）
+            const startTime = performance.now();
+            let rafId = null;
+
+            const animate = (now) => {
+              const elapsed = now - startTime; // ms
+              const t = elapsed / 1000; // s
+
+              // 物理っぽい位置
+              const x = startX + vx * t;
+              const y = startY + vy * t + 0.5 * GRAVITY * t * t;
+              const z = startZ + vz * t;
+
+              // 風の揺らぎ（小さく）
+              const swayX = Math.sin(t * 6 + i) * 0.01;
+              const swayZ = Math.cos(t * 5 + i) * 0.01;
+
+              particle.setAttribute('position', `${x + swayX} ${y} ${z + swayZ}`);
+
+              // フェード（FADE_START_MS から DURATION_MS まで線形で下げる）
+              let opacity = 1;
+              if (elapsed >= FADE_START_MS) {
+                const fadeElapsed = elapsed - FADE_START_MS;
+                const fadeDuration = Math.max(DURATION_MS - FADE_START_MS, 1);
+                opacity = Math.max(1 - (fadeElapsed / fadeDuration), 0);
+              }
+              particle.setAttribute('material', 'opacity', opacity);
+
+              // 終了条件：寿命を超すか、かなり下に落ちたら消す
+              if (elapsed < DURATION_MS && y > -0.5) {
+                rafId = requestAnimationFrame(animate);
+              } else {
+                // 要素がまだあるなら削除（安全のため try/catch）
+                try { el.removeChild(particle); } catch(e){ }
+                if (rafId) cancelAnimationFrame(rafId);
+              }
+            };
+
+            rafId = requestAnimationFrame(animate);
+          }
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <a-scene embedded arjs>
+      <a-marker preset="hiro">
+        <a-entity slow-dissolve></a-entity>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+    <p style="position:fixed;left:10px;top:10px;background:#fff;padding:6px;">⏳ 消えるのをゆっくりに調整済み</p>
+  </body>
+</html>
+<!--
 <!DOCTYPE html>
 <html>
   <head>
@@ -90,6 +185,9 @@
     </p>
   </body>
 </html>
+-->
+
+
 <!--以下元ソース、ちょっといじってみたけど
 <!DOCTYPE html>
 <html>
