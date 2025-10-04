@@ -1,0 +1,290 @@
+<!--
+粒の動きをもっと自然にしたり、重力や散乱効果を追加 する改良版
+-->>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ゆっくり消える自然な粒（重力・散乱・長寿命）</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>body{margin:0;overflow:hidden;}</style>
+
+    <script>
+      // AFRAME.registerComponent('slow-dissolve', {
+      //   init: function () {
+      AFRAME.registerComponent('marker-contained-particles', {
+        init: function () {      
+          const el = this.el;
+
+          // 調整パラメータ（ここを変えれば挙動を簡単にチューニングできます）
+          const PARTICLE_COUNT = 50;
+          const DURATION_MS = 90000;      // 粒の総寿命（ms） ← これを大きくすると長く残る
+          const FADE_START_MS = 3000;    // 何ms後からフェード開始するか（ms）
+          const GRAVITY = -0.15;         // 重力（負の値）。絶対値を小さくするとゆっくり落ちる
+          
+          for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const particle = document.createElement('a-sphere');
+
+            // // 初期位置（中心付近）
+            // const startX = (Math.random() - 0.5) * 0.12;
+            // const startZ = (Math.random() - 0.5) * 0.12;
+            // const startY = 0.04 + Math.random() * 0.04;
+            // 📍 マーカー内の範囲に限定（-0.45〜0.45）
+            const startX = (Math.random() - 0.5) * 0.9;
+            const startZ = (Math.random() - 0.5) * 0.9;
+            const startY = 0.02;
+
+            // // 初速（ランダム）
+            // const vx = (Math.random() - 0.5) * 0.25;
+            // const vy = 0.18 + Math.random() * 0.25; // 上方向の初速（小さめにして滞空時間を延ばす）
+            // const vz = (Math.random() - 0.5) * 0.25;
+            // 拡散方向（マーカー面の上に向かってふんわり）
+            const vx = (Math.random() - 0.5) * 0.1; // 横方向小さめ
+            const vy = 0.15 + Math.random() * 0.1;  // ゆるやかに上昇
+            const vz = (Math.random() - 0.5) * 0.1;
+
+            particle.setAttribute('position', `${startX} ${startY} ${startZ}`);
+            particle.setAttribute('radius', `${0.018 + Math.random()*0.01}`);
+            particle.setAttribute('color', '#FFC0CB');
+            particle.setAttribute('material', 'opacity: 1; transparent: true;');
+
+            el.appendChild(particle);
+
+            // アニメーションループ（requestAnimationFrame）
+            const startTime = performance.now();
+            let rafId = null;
+
+            const animate = (now) => {
+              const elapsed = now - startTime; // ms
+              const t = elapsed / 1000; // s
+
+              // 物理っぽい位置
+              const x = startX + vx * t;
+              const y = startY + vy * t + 0.5 * GRAVITY * t * t;
+              const z = startZ + vz * t;
+
+              // // 風の揺らぎ（小さく）
+              // const swayX = Math.sin(t * 6 + i) * 0.01;
+              // const swayZ = Math.cos(t * 5 + i) * 0.01;
+              // 🍃 軽い揺らぎ
+              const swayX = Math.sin(t * 5 + i) * 0.02;
+              const swayZ = Math.cos(t * 4 + i) * 0.02;
+
+              particle.setAttribute('position', `${x + swayX} ${y} ${z + swayZ}`);
+
+              // // フェード（FADE_START_MS から DURATION_MS まで線形で下げる）
+              // let opacity = 1;
+              // if (elapsed >= FADE_START_MS) {
+              //   const fadeElapsed = elapsed - FADE_START_MS;
+              //   const fadeDuration = Math.max(DURATION_MS - FADE_START_MS, 1);
+              //   opacity = Math.max(1 - (fadeElapsed / fadeDuration), 0);
+              // }
+              // particle.setAttribute('material', 'opacity', opacity);
+              // 徐々にフェードアウト
+              const opacity = Math.max(1 - elapsed / DURATION_MS, 0);
+              particle.setAttribute('material', 'opacity', opacity);
+
+              // // 終了条件：寿命を超すか、かなり下に落ちたら消す
+              // if (elapsed < DURATION_MS && y > -0.5) {
+              //   rafId = requestAnimationFrame(animate);
+              // } else {
+              //   // 要素がまだあるなら削除（安全のため try/catch）
+              //   try { el.removeChild(particle); } catch(e){ }
+              //   if (rafId) cancelAnimationFrame(rafId);
+              // }
+              // マーカー内から出ないよう制限
+              if (
+                elapsed < DURATION_MS &&
+                y > 0 &&
+                Math.abs(x) < 0.5 &&
+                Math.abs(z) < 0.5
+              ) {
+                requestAnimationFrame(animate);
+              } else {
+                el.removeChild(particle);
+              }              
+            };
+
+            // rafId = requestAnimationFrame(animate);
+            requestAnimationFrame(animate);
+          }
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <a-scene embedded arjs>
+      <a-marker preset="hiro">
+        <!--<a-entity slow-dissolve></a-entity>-->
+        <!-- 💠 粒がマーカー内で舞う -->
+        <a-entity marker-contained-particles></a-entity>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+    <!--<p style="position:fixed;left:10px;top:10px;background:#fff;padding:6px;">⏳ 消えるのをゆっくりに調整済み</p>-->
+    <p style="position:fixed;left:10px;top:10px;background:#fff;padding:6px;">⏳ なんと！ビーカーの中ではこんなことが起きていた！</p>
+  </body>
+</html>
+<!--
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>粉が自然に散って消える（重力・拡散効果付き）</title>
+    <meta charset="utf-8">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+      body { margin: 0; overflow: hidden; }
+    </style>
+
+    <script>
+      AFRAME.registerComponent('natural-dissolve', {
+        init: function () {
+          const el = this.el;
+
+          for (let i = 0; i < 100; i++) {
+            const particle = document.createElement('a-sphere');
+
+            // 初期位置（中心付近にランダム配置）
+            const startX = (Math.random() - 0.5) * 0.1;
+            const startZ = (Math.random() - 0.5) * 0.1;
+            const startY = 0.05 + Math.random() * 0.05;
+
+            // 速度ベクトル（拡散方向）
+            const vx = (Math.random() - 0.5) * 0.3;
+            const vy = 0.3 + Math.random() * 0.3;  // 上方向の初速
+            const vz = (Math.random() - 0.5) * 0.3;
+
+            // 重力加速度
+            const gravity = -0.25;
+
+            // パーティクル設定
+            particle.setAttribute('position', `${startX} ${startY} ${startZ}`);
+            particle.setAttribute('radius', '0.02');
+            particle.setAttribute('color', '#FFC0CB'); // ピンク系に変更
+            particle.setAttribute('material', 'opacity: 1; transparent: true;');
+
+            // 自然な動きを再現するアニメーションループ
+            let time = 0;
+            const duration = 10000;
+            const interval = 30; // ミリ秒
+
+            const moveInterval = setInterval(() => {
+              time += interval;
+
+              // シンプルな物理風アニメーション
+              const t = time / 1000; // 秒単位
+              const x = startX + vx * t;
+              const y = startY + vy * t + 0.5 * gravity * t * t;
+              const z = startZ + vz * t;
+
+              // 少し風で揺らぐように
+              const swayX = Math.sin(t * 6 + i) * 0.01;
+              const swayZ = Math.cos(t * 5 + i) * 0.01;
+
+              particle.setAttribute('position', `${x + swayX} ${y} ${z + swayZ}`);
+
+              // 透明度を減らす
+              const opacity = Math.max(1 - t / 3, 0);
+              particle.setAttribute('material', 'opacity', opacity);
+
+              // 下に落ちきったら削除
+              if (y < 0 || time > duration) {
+                el.removeChild(particle);
+                clearInterval(moveInterval);
+              }
+            }, interval);
+
+            el.appendChild(particle);
+          }
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <a-scene embedded arjs>
+      <a-marker preset="hiro">
+        <a-entity natural-dissolve></a-entity>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <p style="position: fixed; top: 10px; left: 10px; background: white; padding: 5px;">
+      🌸 粉が自然に散って落ちる（重力・拡散効果付き）
+    </p>
+  </body>
+</html>
+-->
+
+
+<!--以下元ソース、ちょっといじってみたけど
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>粉が大きく溶けて広がる様子（視認性強化）</title>
+    <meta charset="utf-8">
+    <!-- Web上で3D・VR/ARを簡単に扱えるフレームワーク --><!--
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <!-- マーカー認識型ARをWeb上で実現するライブラリ --><!--
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+      body { margin: 0; overflow: hidden; }
+    </style>
+    <script>
+      // 粉の粒（オレンジ色の球）を生成し、飛び散って消えるアニメーションをつける
+      AFRAME.registerComponent('dissolve-particles', {
+        init: function () {
+          const el = this.el;
+          for (let i = 0; i < 40; i++) {
+            const particle = document.createElement('a-sphere');
+            //const particle = document.querySelector('#particle');
+            
+            const startX = (Math.random() - 0.5) * 0.15;
+            const startZ = (Math.random() - 0.5) * 0.15;
+            const endX = startX + (Math.random() - 0.5) * 0.5;
+            const endY = 0.8 + Math.random() * 0.3;
+            const endZ = startZ + (Math.random() - 0.5) * 0.5;
+
+            particle.setAttribute('position', `${startX} 0.1 ${startZ}`);
+            particle.setAttribute('radius', '0.015'); // 大きめ（0.03）の半分に
+            particle.setAttribute('color', '#FF69B4');  // オレンジ（#FFA500）からピンク
+            particle.setAttribute('material', 'opacity: 1; transparent: true;');
+
+            particle.setAttribute('animation__move', `
+              property: position;
+              to: ${endX} ${endY} ${endZ};
+              dur: 4000;
+              easing: easeOutCubic;
+              loop: false;
+            `);
+
+            particle.setAttribute('animation__fade', `
+              property: material.opacity;
+              to: 0;
+              dur: 10000; // 4000から変更
+              easing: linear;
+              loop: false;
+            `);
+
+            el.appendChild(particle);
+          }
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <!-- Hiroマーカーを認識すると、その位置に<a-entity dissolve-particles>が表示される --><!--
+    <a-scene embedded arjs>
+      <a-marker preset="hiro">
+        <a-entity dissolve-particles></a-entity>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+    <p style="position: fixed; top: 10px; left: 10px; background: white; padding: 5px;">
+      🧪 大きめの粉がふわっと広がる（視認性強化）
+    </p>
+  </body>
+</html>
+-->
